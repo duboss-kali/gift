@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To: 寿星</title>
+    <style>
+        /* --- 1. 基础设置 --- */
+        body {
+            margin: 0;
+            height: 100vh;
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace; 
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* --- 2. 星空与流星特效 --- */
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle var(--duration) linear infinite;
+        }
+        @keyframes twinkle {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        
+        /* 动态生成的流星样式 */
+        .shooting-star {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1), 0 0 0 8px rgba(255, 255, 255, 0.1), 0 0 20px rgba(255, 255, 255, 1);
+            animation: animate 3s linear forwards; 
+            opacity: 0;
+            z-index: 5;
+        }
+        .shooting-star::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 300px;
+            height: 1px;
+            background: linear-gradient(90deg, #fff, transparent);
+        }
+        @keyframes animate {
+            0% { transform: rotate(315deg) translateX(0); opacity: 1; }
+            70% { opacity: 1; }
+            100% { transform: rotate(315deg) translateX(-1000px); opacity: 0; }
+        }
+
+        /* --- 3. 内容区域 --- */
+        .container {
+            position: relative;
+            z-index: 10;
+            width: 80%;
+            max-width: 600px;
+            line-height: 1.8;
+            font-size: 1.1rem;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        
+        #text {
+            white-space: pre-wrap;
+            border-right: 2px solid white;
+        }
+        .cursor-blink {
+            animation: blink 0.75s step-end infinite;
+        }
+        @keyframes blink {
+            from, to { border-color: transparent }
+            50% { border-color: white; }
+        }
+
+        /* --- 4. 封面/开始按钮 --- */
+        #overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s;
+        }
+        #start-btn {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            color: white;
+            background: transparent;
+            border: 2px solid white;
+            border-radius: 30px;
+            cursor: pointer;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+        }
+        #start-btn:hover {
+            background: white;
+            color: black;
+            box-shadow: 0 0 15px white;
+        }
+        .hint {
+            margin-top: 15px;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bgm" loop>
+        <source src="music.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="overlay">
+        <button id="start-btn">开启惊喜</button>
+        <div class="hint">建议开启声音浏览</div>
+    </div>
+
+    <div id="stars-container"></div>
+
+    <div class="container">
+        <span id="text"></span>
+    </div>
+
+    <script>
+        const message = `嘿，李情：\n\n祝你17岁生日快乐✨。\n\n眼前这片星空，是由无数行冰冷的代码组成的。\n就像我们正在面对的，那些有时候怎么也解不开的数理化难题。\n\n但是，\n我想把这个网页送给你。\n\n因为一直觉得，你的名字很特别。\n在这些枯燥、理性的数字世界之外，\n你身上那股努力的韧劲，\n和你对待朋友的真诚，\n是高二生活里最独特的一份“情”绪和温度。\n\n别灰心，\n星星有时会被云遮住，但它们一直在发光。\n你也是。\n\n愿你永远保持这份热情，\n万事胜意，不止今天。\n\n—— 谷益铭`;
+
+        const baseSpeed = 110; 
+        let i = 0;
+        const textElement = document.getElementById("text");
+        const overlay = document.getElementById("overlay");
+        const bgm = document.getElementById("bgm");
+
+        // 1. 初始化背景静态星空
+        function createStars() {
+            const container = document.getElementById('stars-container');
+            const count = 100; 
+            for (let j = 0; j < count; j++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                const size = Math.random() * 2 + 1; 
+                const duration = Math.random() * 3 + 2; 
+                star.style.left = x + '%';
+                star.style.top = y + '%';
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                star.style.setProperty('--duration', duration + 's');
+                container.appendChild(star);
+            }
+        }
+
+        // 2. 动态流星逻辑
+        function createShootingStar() {
+            const container = document.getElementById('stars-container');
+            const star = document.createElement('div');
+            star.className = 'shooting-star';
+            
+            // 随机起始位置 (主要从右侧和顶部产生)
+            const x = Math.random() * window.innerWidth + 300; 
+            const y = Math.random() * (window.innerHeight / 2); 
+            
+            star.style.left = x + 'px';
+            star.style.top = y + 'px';
+            
+            container.appendChild(star);
+
+            // 动画结束后移除元素，释放内存
+            setTimeout(() => {
+                star.remove();
+            }, 3000);
+        }
+
+        // 3. 启动流星雨循环
+        function startShootingStars() {
+            setInterval(() => {
+                if (Math.random() > 0.4) { // 控制出现概率
+                    createShootingStar();
+                }
+            }, 1500); // 每1.5秒检测一次是否生成新流星
+        }
+
+        // 4. 打字机效果
+        function typeWriter() {
+            if (i < message.length) {
+                const char = message.charAt(i);
+                textElement.textContent += char;
+                i++;
+                
+                let currentSpeed = baseSpeed; 
+                if (char === '\n') {
+                    currentSpeed = baseSpeed * 6; 
+                } else if (['，', '。', '！', '？'].includes(char)) {
+                    currentSpeed = baseSpeed * 3;
+                }
+                currentSpeed += Math.random() * 50 - 25;
+                setTimeout(typeWriter, currentSpeed);
+            } else {
+                textElement.classList.add('cursor-blink'); 
+            }
+        }
+
+        // 5. 事件交互
+        document.getElementById('start-btn').addEventListener('click', function() {
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                bgm.play().catch(e => console.log("BGM播放需交互"));
+                setTimeout(typeWriter, 1000); 
+            }, 1000);
+        });
+
+        // 初始化运行
+        createStars();
+        startShootingStars();
+
+    </script>
+</body>
+</html>
